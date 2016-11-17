@@ -1,7 +1,153 @@
-<!DOCTYPE html>
 <html>
+<head>
+<script type="text/javascript" src="phaser.js"></script>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
 </body>
+<script type="text/javascript">
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+ var Bullet = function (game, key) {
+
+        Phaser.Sprite.call(this, game, 0, 0, key);
+
+        this.texture.baseTexture.scaleMode = PIXI.scaleModes.NEAREST;
+
+        this.anchor.set(0.5);
+
+        this.checkWorldBounds = true;
+        this.outOfBoundsKill = true;
+        this.exists = false;
+
+        this.tracking = false;
+        this.scaleSpeed = 0;
+
+    };
+
+    Bullet.prototype = Object.create(Phaser.Sprite.prototype);
+    Bullet.prototype.constructor = Bullet;
+
+    Bullet.prototype.fire = function (x, y, angle, speed, gx, gy) {
+
+        gx = gx || 0;
+        gy = gy || 0;
+
+        this.reset(x, y);
+        //sprite.scale.set(game.rnd.realInRange(0.1, 0.6))
+        this.scale.set(game.rnd.realInRange(0.1, 0.5));
+
+        this.game.physics.arcade.velocityFromAngle(angle, speed, this.body.velocity);
+
+        this.angle = angle;
+
+        this.body.gravity.set(gx, gy);
+
+    };
+
+var Weapon = {};
+Weapon.ScatterShot = function (game) {
+
+        Phaser.Group.call(this, game, game.world, 'Scatter Shot', false, true, Phaser.Physics.ARCADE);
+
+        this.nextFire = 0;
+        this.bulletSpeed = 600;
+        this.fireRate = 40;
+
+        for (var i = 0; i < 10; i++)
+        {
+            this.add(new Bullet(game, 'ball'), true);
+        }
+
+        return this;
+
+    };
+
+Weapon.ScatterShot.prototype = Object.create(Phaser.Group.prototype);
+Weapon.ScatterShot.prototype.constructor = Weapon.ScatterShot;
+
+/*Weapon.ScatterShot.prototype.fire = function (source) {
+
+        if (this.game.time.time < this.nextFire) { return; }
+
+        var y = source.x + 16;
+        var x = (source.y + source.height / 2) + this.game.rnd.between(-10, 10);
+
+        this.getFirstExists(false).fire(x, y, 0, this.bulletSpeed, 0, 0);
+
+        this.nextFire = this.game.time.time + this.fireRate;
+
+    };*/
+    Weapon.ScatterShot.prototype.fire = function (source) {
+
+        if (this.game.time.time < this.nextFire) { return; }
+
+        var x = source.x + 20;
+        var y = source.y + 10;
+
+        for (var i = 0; i < 4; i++) {
+          var angle = game.rnd.between(240, 310)
+         this.getFirstExists(false).fire(x, y, angle, this.bulletSpeed, 0, -angle);
+
+        }
+
+        // this.getFirstExists(false).fire(x, y, 270, this.bulletSpeed, 0, -100);
+        // this.getFirstExists(false).fire(x, y, 310, this.bulletSpeed, 0, -100);
+        // this.getFirstExists(false).fire(x, y, 240, this.bulletSpeed, 0, -1000);
+
+        this.nextFire = this.game.time.time + this.fireRate;
+
+    };    
+
+
+ function init() {
+
+            this.game.renderer.renderSession.roundPixels = true;
+
+            this.physics.startSystem(Phaser.Physics.ARCADE);
+
+        }
+
+function preload() {
+	game.load.image('ball', 'bubble256.png');
+
+}
+
+function create() {
+	game.stage.backgroundColor = "#4488AA";
+	game.input.onTap.add(onTap, this);
+  //this.weapons.push(new Weapon.ScatterShot(this.game));
+
+}
+
+function onTap(pointer, doubleTap) {
+	if (doubleTap)
+    {
+        //  They double-tapped, so swap the image
+/*       console.log(pointer.screenX);
+       //  game.stage.backgroundColor = (game.stage.backgroundColor=="#4488AA") ? "#444555" : "#4488AA";
+        // game.stage.backgroundColor = game.stage.backgroundColor+5;
+       var delay=0;
+       var number_of_buble= game.rnd.realInRange(3, 6);
+         for (var i = 0; i < number_of_buble ; i++)
+        {
+        var sprite = game.add.sprite(pointer.screenX, pointer.screenY, 'ball');
+
+        sprite.scale.set(game.rnd.realInRange(0.1, 0.6));
+
+        var speed =game.rnd.between(4000, 6000);
+
+        game.add.tween(sprite).to({ y: -256 }, speed, Phaser.Easing.Sinusoidal.InOut, true, delay, 0, false);
+
+        delay += 2000;
+        }*/
+        weapons = new Weapon.ScatterShot(this.game);
+        weapons.fire(pointer);
+    }
+ 
+}
+function update() {
+	//game.stage.backgroundColor = game.stage.backgroundColor+50;
+}
+
+</script>
 </html>
