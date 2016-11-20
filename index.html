@@ -1,11 +1,13 @@
 <html>
 <head>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="minimal-ui"/>
 <script type="text/javascript" src="phaser.js"></script>
 </head>
 <body>
 </body>
 <script type="text/javascript">
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
  var Bullet = function (game, key) {
 
@@ -32,7 +34,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
         gx = gx || 0;
         gy = gy || 0;
 
-        this.reset(x, y);
+        this.reset(x, y-100);
         //sprite.scale.set(game.rnd.realInRange(0.1, 0.6))
         this.scale.set(game.rnd.realInRange(0.1, 0.5));
 
@@ -109,24 +111,30 @@ Weapon.ScatterShot.prototype.constructor = Weapon.ScatterShot;
 
 function preload() {
 	game.load.image('ball', 'bubble256.png');
+    game.load.image('button','button.png');
 
 }
 
 function create() {
 	game.stage.backgroundColor = "#4488AA";
-	game.input.onTap.add(onTap, this);
+//   button = game.add.button(game.world.centerX - 95, 400, 'button', actiononClick(this.button), this, 2, 1, 0);
+//  game.input.onTap.add(onTap, button);
+    var button1 = game.add.sprite(100, window.innerHeight-100, 'button');
+    var button2 = game.add.sprite(window.innerWidth -200, window.innerHeight-100, 'button');
+    button1.inputEnabled = true;
+    button2.inputEnabled = true;
+    button1.events.onInputDown.add(onDown, this);
+    button2.events.onInputDown.add(onDown, this);
   //this.weapons.push(new Weapon.ScatterShot(this.game));
 
 }
 
-function onTap(pointer, doubleTap) {
-	if (doubleTap)
-    {
-        //  They double-tapped, so swap the image
-/*       console.log(pointer.screenX);
+function onDown(button,pointer) {
+	     //  They double-tapped, so swap the image
+       console.log(pointer);
        //  game.stage.backgroundColor = (game.stage.backgroundColor=="#4488AA") ? "#444555" : "#4488AA";
         // game.stage.backgroundColor = game.stage.backgroundColor+5;
-       var delay=0;
+/*       var delay=0;
        var number_of_buble= game.rnd.realInRange(3, 6);
          for (var i = 0; i < number_of_buble ; i++)
         {
@@ -142,7 +150,6 @@ function onTap(pointer, doubleTap) {
         }*/
         weapons = new Weapon.ScatterShot(this.game);
         weapons.fire(pointer);
-    }
  
 }
 function update() {
