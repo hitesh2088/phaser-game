@@ -7,99 +7,8 @@
 <body>
 </body>
 <script type="text/javascript">
-var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
- var Bullet = function (game, key) {
-
-        Phaser.Sprite.call(this, game, 0, 0, key);
-
-        this.texture.baseTexture.scaleMode = PIXI.scaleModes.NEAREST;
-
-        this.anchor.set(0.5);
-
-        this.checkWorldBounds = true;
-        this.outOfBoundsKill = true;
-        this.exists = false;
-
-        this.tracking = false;
-        this.scaleSpeed = 0;
-
-    };
-
-    Bullet.prototype = Object.create(Phaser.Sprite.prototype);
-    Bullet.prototype.constructor = Bullet;
-
-    Bullet.prototype.fire = function (x, y, angle, speed, gx, gy) {
-
-        gx = gx || 0;
-        gy = gy || 0;
-
-        this.reset(x, y-100);
-        //sprite.scale.set(game.rnd.realInRange(0.1, 0.6))
-        this.scale.set(game.rnd.realInRange(0.1, 0.5));
-
-        this.game.physics.arcade.velocityFromAngle(angle, speed, this.body.velocity);
-
-        this.angle = angle;
-
-        this.body.gravity.set(gx, gy);
-
-    };
-
-var Weapon = {};
-Weapon.ScatterShot = function (game) {
-
-        Phaser.Group.call(this, game, game.world, 'Scatter Shot', false, true, Phaser.Physics.ARCADE);
-
-        this.nextFire = 0;
-        this.bulletSpeed = 600;
-        this.fireRate = 40;
-
-        for (var i = 0; i < 10; i++)
-        {
-            this.add(new Bullet(game, 'ball'), true);
-        }
-
-        return this;
-
-    };
-
-Weapon.ScatterShot.prototype = Object.create(Phaser.Group.prototype);
-Weapon.ScatterShot.prototype.constructor = Weapon.ScatterShot;
-
-/*Weapon.ScatterShot.prototype.fire = function (source) {
-
-        if (this.game.time.time < this.nextFire) { return; }
-
-        var y = source.x + 16;
-        var x = (source.y + source.height / 2) + this.game.rnd.between(-10, 10);
-
-        this.getFirstExists(false).fire(x, y, 0, this.bulletSpeed, 0, 0);
-
-        this.nextFire = this.game.time.time + this.fireRate;
-
-    };*/
-    Weapon.ScatterShot.prototype.fire = function (source) {
-
-        if (this.game.time.time < this.nextFire) { return; }
-
-        var x = source.x + 20;
-        var y = source.y + 10;
-
-        for (var i = 0; i < 4; i++) {
-          var angle = game.rnd.between(240, 310)
-         this.getFirstExists(false).fire(x, y, angle, this.bulletSpeed, 0, -angle);
-
-        }
-
-        // this.getFirstExists(false).fire(x, y, 270, this.bulletSpeed, 0, -100);
-        // this.getFirstExists(false).fire(x, y, 310, this.bulletSpeed, 0, -100);
-        // this.getFirstExists(false).fire(x, y, 240, this.bulletSpeed, 0, -1000);
-
-        this.nextFire = this.game.time.time + this.fireRate;
-
-    };    
-
+var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update });
 
  function init() {
 
@@ -108,52 +17,159 @@ Weapon.ScatterShot.prototype.constructor = Weapon.ScatterShot;
             this.physics.startSystem(Phaser.Physics.ARCADE);
 
         }
-
 function preload() {
-	game.load.image('ball', 'bubble256.png');
-    game.load.image('button','button.png');
+
+    game.load.image('button', 'button.png');
+    game.load.image('bullet', 'bubble256.png');
+    game.load.image('veggies', 'Metalica.png');
+    game.load.image('curve', 'back-curve.png');
+
 
 }
+
+var sprite;
+var bullets;
+var veggies;
+var cursors;
+var obstacle;
+
+var bulletTime = 0;
+var bullet;
 
 function create() {
-	game.stage.backgroundColor = "#4488AA";
-//   button = game.add.button(game.world.centerX - 95, 400, 'button', actiononClick(this.button), this, 2, 1, 0);
-//  game.input.onTap.add(onTap, button);
-    var button1 = game.add.sprite(100, window.innerHeight-100, 'button');
-    var button2 = game.add.sprite(window.innerWidth -200, window.innerHeight-100, 'button');
+	game.scale.pageAlignHorizontally = true;
+	game.scale.pageAlignVertically = true;
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    game.input.addPointer();
+    game.input.addPointer();
+	//game.scale.setScreenSize(true);
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.arcade.gravity.y = 100;
+
+    game.stage.backgroundColor = '#4488AA';
+
+    //  This will check Group vs. Group collision (bullets vs. veggies!)
+
+    veggies = game.add.group();
+    veggies.enableBody = true;
+    veggies.physicsBodyType = Phaser.Physics.ARCADE;
+
+    for (var i = 0; i < 5; i++)
+    {
+        var c = veggies.create(300*i, 100, 'veggies', game.rnd.integerInRange(0, 36));
+        c.name = 'veg' + i;
+        c.body.gravity.y = 50*i
+        c.body.bounce.y = 0.8;
+        c.body.outOfBoundsKill= true;
+        c.body.collideWorldBounds = true;
+        c.body.setCircle(15);
+      //  c.body.immovable = true;
+
+    }
+
+    bullets = game.add.group();
+    bullets.enableBody = true;
+    bullets.physicsBodyType = Phaser.Physics.ARCADE;
+
+    for (var i = 0; i < 40; i++)
+    {
+        var b = bullets.create(0, 0, 'bullet');
+        var rscl =game.rnd.realInRange(0.1, 0.5);
+        b.name = 'bullet' + i;
+        b.exists = false;
+        b.visible = false;
+        b.checkWorldBounds = true;
+        b.anchor.set(0.5);
+        b.events.onOutOfBounds.add(resetBullet, this);
+        b.scale.set(rscl);
+        b.body.setCircle(250*rscl);
+
+    }
+
+   // sprite = game.add.sprite(400, 550, 'phaser');
+   // game.physics.enable(sprite, Phaser.Physics.ARCADE);
+    obstacle = game.add.physicsGroup();
+    obstacle = obstacle.create(game.world.centerX,800,'curve');
+    //obstacle.anchor.set(0.5);
+    game.physics.arcade.enable(obstacle);
+    obstacle.scale.set(1);
+    obstacle.enableBody = true;
+    obstacle.physicsBodyType = Phaser.Physics.ARCADE;
+    obstacle.body.outOfBoundsKill= true;
+    obstacle.body.collideWorldBounds = true;
+    obstacle.body.immovable = true;
+
+    var button1 = game.add.sprite(100, window.innerHeight-200, 'button');
+    var button2 = game.add.sprite(window.innerWidth -200, window.innerHeight-200, 'button');
     button1.inputEnabled = true;
     button2.inputEnabled = true;
+    button1.scale.set(2);
+    button2.scale.set(2);
+    
     button1.events.onInputDown.add(onDown, this);
     button2.events.onInputDown.add(onDown, this);
-  //this.weapons.push(new Weapon.ScatterShot(this.game));
+
+    //cursors = game.input.keyboard.createCursorKeys();
+    //game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
 
 }
 
-function onDown(button,pointer) {
-	     //  They double-tapped, so swap the image
-       console.log(pointer);
-       //  game.stage.backgroundColor = (game.stage.backgroundColor=="#4488AA") ? "#444555" : "#4488AA";
-        // game.stage.backgroundColor = game.stage.backgroundColor+5;
-/*       var delay=0;
-       var number_of_buble= game.rnd.realInRange(3, 6);
-         for (var i = 0; i < number_of_buble ; i++)
-        {
-        var sprite = game.add.sprite(pointer.screenX, pointer.screenY, 'ball');
+function update() {
 
-        sprite.scale.set(game.rnd.realInRange(0.1, 0.6));
-
-        var speed =game.rnd.between(4000, 6000);
-
-        game.add.tween(sprite).to({ y: -256 }, speed, Phaser.Easing.Sinusoidal.InOut, true, delay, 0, false);
-
-        delay += 2000;
-        }*/
-        weapons = new Weapon.ScatterShot(this.game);
-        weapons.fire(pointer);
+    //  As we don't need to exchange any velocities or motion we can the 'overlap' check instead of 'collide'
+    game.physics.arcade.collide(bullets, veggies,collisionHandler);
+    game.physics.arcade.collide(obstacle, veggies);
+    obstacle.body.gravity = 0;
+   // obstacle.body.velocity.x = 0;
+   // obstacle.body.velocity.y = 0;
  
 }
-function update() {
-	//game.stage.backgroundColor = game.stage.backgroundColor+50;
+function xyz(obstacle,veggies){
+ }
+function onDown(button,pointer) {
+	game.add.tween(button.scale).to({x:1.5, y: 1.5}, 200, Phaser.Easing.Cubic.Out, true);
+	game.add.tween(button.scale).to({x: 2, y: 2}, 200, Phaser.Easing.Cubic.Out, true, 200);
+	fireBullet(button)
+}
+
+function fireBullet (button) {
+
+    if (game.time.now > bulletTime)
+    {
+    	button.scale.set(1.5);
+        bullet = bullets.getFirstExists(false);
+        var angle = game.rnd.between(240, 310);
+        if (bullet)
+        {
+            var speed = 600;
+            var x = button.x + 20;
+        	var y = button.y + 10;
+            
+            bullet.reset(x,y);
+            bullet.angle = angle;
+        	bullet.body.gravity.set(x, y);
+           // bullet.body.velocity =[{Point (x=0 ,y=0)}];
+            bullet.game.physics.arcade.velocityFromAngle(angle, speed, bullet.body.velocity);
+            bullet.body.gravity.set(0,-angle );
+            bulletTime = game.time.now + 4;
+
+        }
+    }
+
+}
+//  Called if the bullet goes out of the screen
+function resetBullet (bullet) {
+
+    bullet.kill();
+
+}
+
+//  Called if the bullet hits one of the veg sprites
+function collisionHandler (bullet, veg) {
+    veg.body.bounce.x = 0.8;
+    bullet.kill();
+   // veg.kill();
+
 }
 
 </script>

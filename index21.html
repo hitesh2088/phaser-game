@@ -1,0 +1,155 @@
+<html>
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="minimal-ui"/>
+<script type="text/javascript" src="phaser.js"></script>
+</head>
+<body>
+</body>
+<script type="text/javascript">
+var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var balltodrop;
+var eachball;
+ var Bullet = function (game, key) {
+
+        Phaser.Sprite.call(this, game, 0, 0, key);
+
+        //this.texture.baseTexture.scaleMode = PIXI.scaleModes.NEAREST;
+        this.anchor.set(0.5);
+        this
+        this.checkWorldBounds = true;
+        this.outOfBoundsKill = true;
+        this.exists = false;
+        this.enableBody = true;
+
+        this.tracking = false;
+        this.scaleSpeed = 0;
+
+    };
+
+    Bullet.prototype = Object.create(Phaser.Sprite.prototype);
+    Bullet.prototype.constructor = Bullet;
+
+    Bullet.prototype.fire = function (x, y, angle, speed, gx, gy) {
+
+        gx = gx || 0;
+        gy = gy || 0;
+        console.log('gx'+angle);
+        this.reset(x, y-100);
+        //sprite.scale.set(game.rnd.realInRange(0.1, 0.6))
+        this.scale.set(game.rnd.realInRange(0.1, 0.5));
+        console.log('velo'+this.body.velocity);
+        this.game.physics.arcade.velocityFromAngle(angle, speed, this.body.velocity);
+
+        this.angle = angle;
+
+        this.body.gravity.set(gx, gy);
+
+
+    };
+
+var Weapon = {};
+Weapon.ScatterShot = function (game) {
+
+        Phaser.Group.call(this, game, game.world, 'Scatter Shot', false, true, Phaser.Physics.ARCADE);
+
+        this.nextFire = 0;
+        this.bulletSpeed = 600;
+        this.fireRate = 40;
+
+        for (var i = 0; i < 10; i++)
+        {
+            this.add(new Bullet(game, 'ball'), true);
+        }
+
+        return this;
+
+    };
+
+Weapon.ScatterShot.prototype = Object.create(Phaser.Group.prototype);
+Weapon.ScatterShot.prototype.constructor = Weapon.ScatterShot;
+Weapon.ScatterShot.prototype.fire = function (source) {
+
+        if (this.game.time.time < this.nextFire) { return; }
+
+        var x = source.x + 20;
+        var y = source.y + 10;
+
+        for (var i = 0; i < 4; i++) {
+          var angle = game.rnd.between(240, 310)
+         this.getFirstExists(false).fire(x, y, angle, this.bulletSpeed, 0, -angle);
+
+        }
+        this.nextFire = this.game.time.time + this.fireRate;
+    };    
+
+
+ function init() {
+
+            this.game.renderer.renderSession.roundPixels = true;
+
+            this.physics.startSystem(Phaser.Physics.ARCADE);
+
+        }
+
+function preload() {
+	game.load.image('ball', 'bubble256.png');
+    game.load.image('button','button.png');
+    game.load.image('balltodrop','Metalica.png');
+}
+
+function create() {
+	game.stage.backgroundColor = "#4488AA";
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.arcade.gravity.y = 100;
+    var button1 = game.add.sprite(100, window.innerHeight-100, 'button');
+    var button2 = game.add.sprite(window.innerWidth -200, window.innerHeight-100, 'button');
+    button1.inputEnabled = true;
+    button2.inputEnabled = true;
+    button1.events.onInputDown.add(onDown, this);
+    button2.events.onInputDown.add(onDown, this);
+    balltodrop = game.add.group();
+   balltodrop.enableBody = true;
+    //balltodrop.physicsBodyType = Phaser.Physics.ARCADE;
+
+//    balltodrop.setAll('checkWorldBounds', true);
+
+    balltodrop.setAll('checkWorldBounds', true);
+    for (var i =4; i >= 0; i--) {
+        eachball = game.add.sprite( 300*i ,100, 'balltodrop');
+        game.physics.enable(eachball, Phaser.Physics.ARCADE);
+        eachball.body.outOfBoundsKill= true;
+        eachball.body.collideWorldBounds = true;
+        eachball.body.bounce.y = 0.8;
+        eachball.enableBody = true;
+    eachball.body.gravity.y = 50*i;
+    eachball.body.gravity.x = 20*i;
+        balltodrop.addChild(eachball);
+
+            }
+  //this.weapons.push(new Weapon.ScatterShot(this.game));
+
+}
+
+function onDown(button,pointer) {
+        weapons = new Weapon.ScatterShot(this.game);
+        weapons.fire(pointer);
+ 
+}
+function update() {
+	//game.stage.backgroundColor = game.stage.backgroundColor+50;
+    //game.physics.arcade.overlap(Bullet, game.eachball ,bouncingEffect);
+    //console.log(eachball);
+    game.physics.arcade.overlap(Bullet, eachball, xyz, null, this);
+
+}
+function xyz(buble,ball) {
+ball.kill();
+}
+function render(){
+
+     game.debug.bodyInfo(Bullet);
+}
+
+</script>
+</html>
