@@ -92,7 +92,7 @@ function create() {
     obstacle = obstacle.create(game.world.centerX,800,'curve');
     //obstacle.anchor.set(0.5);
     game.physics.arcade.enable(obstacle);
-    obstacle.scale.set(1);
+    //obstacle.scale.set(1);
     obstacle.enableBody = true;
     obstacle.physicsBodyType = Phaser.Physics.ARCADE;
     obstacle.body.outOfBoundsKill= true;
@@ -119,13 +119,14 @@ function update() {
     //  As we don't need to exchange any velocities or motion we can the 'overlap' check instead of 'collide'
     game.physics.arcade.collide(bullets, veggies,collisionHandler);
     game.physics.arcade.collide(obstacle, veggies);
+    game.physics.arcade.collide(bullets,obstacle);
+
     obstacle.body.gravity = 0;
    // obstacle.body.velocity.x = 0;
    // obstacle.body.velocity.y = 0;
  
 }
-function xyz(obstacle,veggies){
- }
+ 
 function onDown(button,pointer) {
 	game.add.tween(button.scale).to({x:1.5, y: 1.5}, 200, Phaser.Easing.Cubic.Out, true);
 	game.add.tween(button.scale).to({x: 2, y: 2}, 200, Phaser.Easing.Cubic.Out, true, 200);
